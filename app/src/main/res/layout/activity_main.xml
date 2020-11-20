@@ -12,8 +12,32 @@
         android:background="@drawable/backtint"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
+        <RelativeLayout
+            android:layout_margin="25dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" >
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/playlist"
+                android:tint="@color/color_primary"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_playlist"/>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:tint="@color/color_primary"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentEnd="true"
+                android:src="@drawable/ic_settings" />
+
+        </RelativeLayout>
 
         <LinearLayout
+            android:layout_marginBottom="125dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -27,17 +51,41 @@
                 android:layout_height="300dp"
                 android:layout_gravity="center"
                 android:src="@drawable/disk"
-                app:border_color="#093091"
-                app:border_width="5dp"
+                app:border_color="@color/color_primary"
+                app:border_width="3dp"
                 app:centercircle_diammterer="1"
-                app:progress_color="#03A9F4"
+                app:progress_color="@color/color_tint"
                 app:progress_startAngle="40"
-                app:draw_anticlockwise="false"
-                app:enable_touch="false"/>
+                app:draw_anticlockwise="false"/>
 
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_margin="15dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@id/layout_control">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textColor="@color/color_primary"
+                android:textSize="20sp"
+                android:gravity="center_horizontal"
+                android:text="Titre de la chanson" />
+
+            <TextView
+                android:textColor="@color/color_primary"
+                android:gravity="center_horizontal"
+                android:textSize="16sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Artiste"/>
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/layout_control"
             android:background="@drawable/back"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,40 +95,57 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent" >
             <LinearLayout
-                android:layout_margin="15dp"
+                android:layout_margin="25dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
+                    android:tint="@color/color_tint"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:src="@drawable/ic_previous"/>
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
+                    android:layout_width="52dp"
+                    android:tint="@color/color_tint"
+                    android:layout_height="52dp"
                     android:src="@drawable/ic_play"/>
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
+                    android:tint="@color/color_tint"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:src="@drawable/ic_next"/>
             </LinearLayout>
             <LinearLayout
                 android:orientation="horizontal"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_margin="15dp"
+                android:weightSum="12"
                 android:layout_height="wrap_content">
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_previous"/>
+                    android:tint="@color/color_primary"
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_shuffle"/>
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_play"/>
+                    android:tint="@color/color_primary"
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_favorite"/>
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_next"/>
+                    android:tint="@color/color_primary"
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_favorite"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:tint="@color/color_primary"
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_loop"/>
             </LinearLayout>
 
         </LinearLayout>
