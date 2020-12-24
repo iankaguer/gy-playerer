@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     public void onBackPressed(){
         super.onBackPressed();
         Intent a = new Intent(Intent.ACTION_MAIN);

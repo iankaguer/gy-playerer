@@ -4,14 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:background="#F6F5F5"
+    android:orientation="vertical"
     android:layout_height="match_parent"
     tools:context=".SongList">
     <LinearLayout
-        android:background="@color/white"
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="wrap_content">
         <RelativeLayout
+            android:background="@drawable/backitem"
             android:layout_margin="15dp"
             android:layout_width="match_parent"
             android:orientation="horizontal"
@@ -35,5 +36,9 @@
         </RelativeLayout>
 
     </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>
