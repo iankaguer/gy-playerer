@@ -6,6 +6,8 @@
     android:layout_width="match_parent"
     android:background="@drawable/backitem"
     android:elevation="3dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="5dp"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
     <ImageView
@@ -45,7 +47,8 @@
         </LinearLayout>
         <ImageView
             android:id="@+id/isfav"
-            android:padding="3dp"
+            android:padding="5dp"
+            android:layout_margin="5dp"
             android:tint="@color/color_tint"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"

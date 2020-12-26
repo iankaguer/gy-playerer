@@ -23,6 +23,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" android:theme="@style/Theme.AppCompat.NoActionBar"/>
+        <service android:name=".SongPlayer"/>
     </application>
 
 </manifest>

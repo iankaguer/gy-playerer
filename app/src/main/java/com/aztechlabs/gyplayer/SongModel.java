@@ -15,7 +15,7 @@ public class SongModel extends RealmObject {
     private boolean isfavorite;
 
     public SongModel() {
-        isfavorite = true;
+        isfavorite = false;
     }
 
     public long getId() {
@@ -58,14 +58,14 @@ public class SongModel extends RealmObject {
         this.artist = artist;
     }
 
-    public static boolean inDBsong(Context ctx, String name, String path){
+    public static boolean iSInDBsong(Context ctx, String name, String path){
         Realm.init(ctx);
         Realm realm = Realm.getDefaultInstance();
         SongModel songModel = realm.where(SongModel.class)
                 .equalTo("name", name)
                 .equalTo("uri", path)
                 .findFirst();
-        if(songModel == null){
+        if(songModel != null){
             return true;
         }
         return false;

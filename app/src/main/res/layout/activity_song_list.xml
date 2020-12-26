@@ -20,13 +20,15 @@
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/back"
                 android:layout_margin="5dp"
+                android:padding="3dp"
                 android:layout_width="32dp"
                 android:tint="@color/color_primary"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_back"/>
+                android:src="@drawable/ic_music"/>
             <androidx.appcompat.widget.AppCompatImageView
                 android:layout_alignParentEnd="true"
                 android:layout_margin="5dp"
+                android:padding="3dp"
                 android:tint="@color/color_primary"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
@@ -39,6 +41,9 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerv"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="0dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_weight="1"/>
 
 </LinearLayout>
