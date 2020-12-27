@@ -20,7 +20,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class SongList extends AppCompatActivity {
-    public static final String Broadcast_PLAY_NEW_AUDIO = "com.aztechlabs.gyplayer.PlayNewAudio";
+    public static final String _PLAY_NEW_SONG = "com.aztechlabs.gyplayer.PlayNewAudio";
     AppCompatImageView back;
     private SongPlayer player;
     boolean serviceBound = false;
@@ -43,7 +43,12 @@ public class SongList extends AppCompatActivity {
         recyclerV.addOnItemTouchListener(new CustomTouchListener(this, new onItemClickListener() {
             @Override
             public void onClick(View view, int index) {
-                playAudio(index);
+                //playAudio(index);
+                //Log.e("gp log", "gp le son => "+listSons.get(index));
+                SongModel son = listSons.get(index);
+
+                playAudio(son.getUri());
+
             }
         }));
 
@@ -101,20 +106,20 @@ public class SongList extends AppCompatActivity {
         }
     };
 
-    public void playAudio(int audioIndex) {
-        SongModel son = listSons.get(audioIndex);
+    public void playAudio(String path) {
+        //SongModel son = listSons.get(audioIndex);
         if (!serviceBound) {
 
             Intent playerIntent = new Intent(this, SongPlayer.class);
-            playerIntent.putExtra("media", son.getUri());
+            playerIntent.putExtra("media", path);
             startService(playerIntent);
             bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         } else {
 
             //Service is active
             //Send a broadcast to the service -> PLAY_NEW_AUDIO
-            Intent broadcastIntent = new Intent(Broadcast_PLAY_NEW_AUDIO);
-            broadcastIntent.putExtra("media", son.getUri());
+            Intent broadcastIntent = new Intent(_PLAY_NEW_SONG);
+            broadcastIntent.putExtra("media", path);
             sendBroadcast(broadcastIntent);
         }
         /*if (!serviceBound) {

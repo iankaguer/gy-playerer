@@ -56,10 +56,10 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
         return viewHolder;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
+   // @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     public void onBindViewHolder(@NonNull SongListHolder holder, int position) {
-        Log.e("lesSons", songs+"");
+        //Log.e("lesSons", songs+"");
         SongModel song = songs.get(position);
 
 

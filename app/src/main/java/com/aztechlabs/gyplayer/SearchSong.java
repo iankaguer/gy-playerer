@@ -40,8 +40,8 @@ public class SearchSong extends AsyncTask<Void, Integer, Void> {
                 String chemin = cr.getString(1);
                 String artist = cr.getString(2);
 
-                Log.e("curseur titre => ", title);
-                Log.e("curseur chemin=> ", chemin);
+                /*Log.e("curseur titre => ", title);
+                Log.e("curseur chemin=> ", chemin);*/
 
                 if (!SongModel.iSInDBsong(ctx, title, chemin)){
                     Realm.init(ctx);
@@ -50,7 +50,6 @@ public class SearchSong extends AsyncTask<Void, Integer, Void> {
                     Number maxId = realm.where(SongModel.class).max("id");
                     int nextId = (maxId == null) ? 1 : maxId.intValue() + 1;
                     SongModel song = new SongModel();
-
 
                     realm.beginTransaction();
 

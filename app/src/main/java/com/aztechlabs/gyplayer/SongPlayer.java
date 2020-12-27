@@ -5,8 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.telephony.PhoneStateListener;
@@ -39,7 +41,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     }
 
     private void initMediaPlayer() {
-        mediaPlayer = new MediaPlayer();
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+        }
+        //Reset so that the MediaPlayer is not pointing to another data source
+        mediaPlayer.reset();
         //Set up MediaPlayer event listeners
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
@@ -47,23 +53,34 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         mediaPlayer.setOnBufferingUpdateListener(this);
         mediaPlayer.setOnSeekCompleteListener(this);
         mediaPlayer.setOnInfoListener(this);
-        //Reset so that the MediaPlayer is not pointing to another data source
-        mediaPlayer.reset();
+
 
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .build());//mediaPlayer.create(getApplicationContext(), Uri.parse(mediaFile));
+
         try {
             // Set the data source to the mediaFile location
             mediaPlayer.setDataSource(mediaFile);
+            mediaPlayer.prepareAsync();
         } catch (IOException e) {
-            e.printStackTrace();
+
+            //e.printStackTrace();
             stopSelf();
         }
-        //mediaPlayer.prepareAsync();
-        try {
-            mediaPlayer.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        callStateListener();
+        registerRemovingHeadphoneReceiver();
+        register_playNewAudio();
     }
 
     @Override
@@ -71,8 +88,10 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         try {
             //An audio file is passed to the service through putExtra();
             mediaFile = intent.getExtras().getString("media");
+
         } catch (NullPointerException e) {
-            stopSelf();
+           stopSelf();
+            //Log.e("logerror2", e.getMessage());
         }
 
         //Request audio focus
@@ -81,10 +100,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
             stopSelf();
         }
 
-        if (mediaFile != null && mediaFile != "")
+        if (mediaFile != null && mediaFile != "") {
             initMediaPlayer();
-
+        }
         return super.onStartCommand(intent, flags, startId);
+        //return  START_NOT_STICKY;
     }
 
 
@@ -151,7 +171,8 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     @Override
     public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
-        switch (i) {
+        Log.e("MediaPlayer Error", i+"MEDIA " + i1);
+        /*switch (i) {
             case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
                 Log.e("MediaPlayer Error", "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + i1);
                 break;
@@ -161,7 +182,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
             case MediaPlayer.MEDIA_ERROR_UNKNOWN:
                 Log.e("MediaPlayer Error", "MEDIA ERROR UNKNOWN " + i1);
                 break;
-        }
+        }*/
         return false;
     }
 
@@ -284,14 +305,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            //Get the new media index form SharedPreferences
-           /* audioIndex = new StorageUtil(getApplicationContext()).loadAudioIndex();
-            if (audioIndex != -1 && audioIndex < audioList.size()) {
-                //index is in a valid range
-                activeAudio = audioList.get(audioIndex);
-            } else {
-                stopSelf();
-            }*/
+            mediaFile = intent.getExtras().getString("media");
 
             //A PLAY_NEW_AUDIO action received eset mediaPlayer to play the new Audio
             stopMedia();
@@ -304,7 +318,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     private void register_playNewAudio() {
         //Register playNewMedia receiver
-        IntentFilter filter = new IntentFilter(SongList.Broadcast_PLAY_NEW_AUDIO);
+        IntentFilter filter = new IntentFilter(SongList._PLAY_NEW_SONG);
         registerReceiver(playNewAudio, filter);
     }
 }

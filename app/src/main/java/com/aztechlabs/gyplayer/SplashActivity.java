@@ -23,6 +23,7 @@ import io.realm.RealmConfiguration;
 public class SplashActivity extends AppCompatActivity {
     int PERMISSIONWSTO = 1101;
     int PERMISSIONRSTO = 1102;
+    int PERMISSIONPHONE = 1103;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,28 +33,6 @@ public class SplashActivity extends AppCompatActivity {
 
 
 
-        CheckReadAndWrite();
-
-            try {
-                new SearchSong(SplashActivity.this, progress).execute().get();
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }finally {
-                new Timer().schedule(new TimerTask(){
-                    public void run() {
-                        startActivity(new Intent(SplashActivity.this, SongList.class));
-                    }
-                }, 2500);
-            }
-
-
-
-        //realmMigration();
-
-
-    }
-
-    public void CheckReadAndWrite() {
         if (ActivityCompat.checkSelfPermission( SplashActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(SplashActivity.this,
@@ -65,7 +44,45 @@ public class SplashActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(SplashActivity.this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
         }
+
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONPHONE);
+        }
+
+        try {
+            new SearchSong(SplashActivity.this, progress).execute().get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }finally {
+            new Timer().schedule(new TimerTask(){
+                public void run() {
+                    startActivity(new Intent(SplashActivity.this, SongList.class));
+                }
+            }, 2500);
+        }
+
+
+
+        //realmMigration();
+
+
     }
+
+    /*public void CheckReadAndWrite() {
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
+        }
+
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
+        }
+    }*/
 
 
 
