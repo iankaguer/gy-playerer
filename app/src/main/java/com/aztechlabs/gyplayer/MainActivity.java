@@ -29,11 +29,14 @@ import android.widget.TextView;
 
 import com.vansuita.gaussianblur.GaussianBlur;
 
+import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import io.realm.Realm;
 
+import static com.aztechlabs.gyplayer.SongList._PLAY_NEW_SONG;
 import static com.aztechlabs.gyplayer.SongPlayer.ACTION_NEXT;
 
 
@@ -138,22 +141,31 @@ public class MainActivity extends AppCompatActivity {
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (player.mediaPlayer.isPlaying()){
-                    player.mediaPlayer.pause();
-                }else {
-                    if (lecteur.getLastPlayedUri() != null ||lecteur.getLastPlayedUri() != ""){
-                        player.mediaFile = lecteur.getLastPlayedUri();
+                if (player !=null && player.mediaPlayer !=null){
+                    if (player.mediaPlayer.isPlaying()){
+                        player.mediaPlayer.pause();
+                        btnPlay.setImageResource(R.drawable.ic_play);
+                    }else {
+                        btnPlay.setImageResource(R.drawable.ic_pause);
+                        if (lecteur.getLastPlayedUri() != null ||lecteur.getLastPlayedUri() != ""){
+                            player.mediaFile = lecteur.getLastPlayedUri();
 
+                        }
+                        player.mediaPlayer.start();
                     }
-                    player.mediaPlayer.start();
+                }else {
+                    List<SongModel> listSons = realm.where(SongModel.class).findAll();
+                    SongModel son = listSons.get(new Random().nextInt(listSons.size()));
+                    playAudio(son.getUri());
                 }
+
             }
         });
 
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                playNextSong();
+                //playNextSong();
             }
         });
     }
@@ -202,7 +214,13 @@ public class MainActivity extends AppCompatActivity {
                 serviceBound = true;
                 btnPlay.setImageResource(R.drawable.ic_pause);
                 updateInfo();
+            }else {
+                if (lecteur.getLastPlayedUri() !=null){
+                    player.mediaFile = lecteur.getLastPlayedUri();
+                }
+
             }
+
 
 
         }
@@ -249,14 +267,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void playNextSong() {
+    public void playAudio(String path) {
         //SongModel son = listSons.get(audioIndex);
+        if (!serviceBound) {
 
+            Intent playerIntent = new Intent(this, SongPlayer.class);
+            playerIntent.putExtra("media", path);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
 
-            Intent broadcastIntent = new Intent(ACTION_NEXT);
-            //broadcastIntent.putExtra("media", path);
+            //Service is active
+            //Send a broadcast to the service -> PLAY_NEW_AUDIO
+            Intent broadcastIntent = new Intent(_PLAY_NEW_SONG);
+            broadcastIntent.putExtra("media", path);
             sendBroadcast(broadcastIntent);
-
+        }
 
     }
 

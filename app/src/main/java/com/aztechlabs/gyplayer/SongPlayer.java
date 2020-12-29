@@ -65,6 +65,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     private MediaSession mediaSession;
     private MediaController.TransportControls transportControls;
     private static final int NOTIF_ID = 101;
+    Realm realm;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -73,7 +74,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     private void initMediaPlayer() {
         Realm.init(getApplicationContext());
-        Realm realm = Realm.getDefaultInstance();
+        realm = Realm.getDefaultInstance();
         lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
         listSons = realm.where(SongModel.class).findAll();
         if (mediaPlayer == null) {
@@ -124,14 +125,24 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        try {
-            //An audio file is passed to the service through putExtra();
-            mediaFile = intent.getExtras().getString("media");
+        if (intent.hasExtra("media")){
+            try {
+                //An audio file is passed to the service through putExtra();
+                mediaFile = intent.getExtras().getString("media");
 
-        } catch (NullPointerException e) {
-           stopSelf();
-            //Log.e("logerror2", e.getMessage());
+            } catch (NullPointerException e) {
+                stopSelf();
+                //Log.e("logerror2", e.getMessage());
+            }
+        }else {
+
+            if (lecteur.getLastPlayedUri() != null){
+                mediaFile=lecteur.getLastPlayedUri();
+            }else {
+                mediaFile=listSons.get(0).getUri();
+            }
         }
+
 
         //Request audio focus
         if (requestAudioFocus() == false) {
@@ -213,6 +224,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     @Override
     public void onDestroy() {
         super.onDestroy();
+        lecteur.setLastPlayedUri(mediaFile);
+        lecteur.setLastPlayedPosition(mediaPlayer.getCurrentPosition());
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(lecteur);
+        realm.commitTransaction();
         if (mediaPlayer != null) {
             stopMedia();
             mediaPlayer.release();
@@ -332,6 +348,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         @Override
         public void onReceive(Context context, Intent intent) {
             //pause audio
+            lecteur.setLastPlayedUri(mediaFile);
+            lecteur.setLastPlayedPosition(mediaPlayer.getCurrentPosition());
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(lecteur);
+            realm.commitTransaction();
             pauseMedia();
             buildNotification(PlaybackStatus.PAUSED);
         }
@@ -385,7 +406,10 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
             //A PLAY_NEW_AUDIO action received eset mediaPlayer to play the new Audio
             stopMedia();
-            mediaPlayer.reset();
+            /*if (mediaPlayer == null){
+                initMediaPlayer();
+            }*/
+            //mediaPlayer.reset();
             initMediaPlayer();
             //updateMetaData();
             buildNotification(PlaybackStatus.PLAYING);
