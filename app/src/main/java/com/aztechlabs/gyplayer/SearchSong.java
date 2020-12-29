@@ -25,7 +25,6 @@ public class SearchSong extends AsyncTask<Void, Integer, Void> {
     @Override
     protected Void doInBackground(Void... voids) {
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        ArrayList<String> listPath = null;
         String[] selection = {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.DATA,

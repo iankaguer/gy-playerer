@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
+import io.realm.RealmResults;
 
 public class SplashActivity extends AppCompatActivity {
     int PERMISSIONWSTO = 1101;
@@ -32,7 +33,7 @@ public class SplashActivity extends AppCompatActivity {
         ProgressBar progress = findViewById(R.id.progress);
 
 
-
+        //realmMigration();
         if (ActivityCompat.checkSelfPermission( SplashActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(SplashActivity.this,
@@ -51,6 +52,13 @@ public class SplashActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONPHONE);
         }
 
+        Realm.init(this);
+        Realm realm = Realm.getDefaultInstance();
+        LecteurPrefModel lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+        if (lecteur == null){
+            LecteurPrefModel.initLecteur(this);
+        }
+
         try {
             new SearchSong(SplashActivity.this, progress).execute().get();
         } catch (ExecutionException | InterruptedException e) {
@@ -65,26 +73,10 @@ public class SplashActivity extends AppCompatActivity {
 
 
 
-        //realmMigration();
+
 
 
     }
-
-    /*public void CheckReadAndWrite() {
-        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(SplashActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
-        }
-
-        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(SplashActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
-        }
-    }*/
-
-
 
     public void realmMigration(){
         Realm.init(getApplicationContext());
