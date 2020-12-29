@@ -34,6 +34,8 @@ import java.util.TimerTask;
 
 import io.realm.Realm;
 
+import static com.aztechlabs.gyplayer.SongPlayer.ACTION_NEXT;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -132,6 +134,28 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, SongList.class));
             }
         });
+
+        btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (player.mediaPlayer.isPlaying()){
+                    player.mediaPlayer.pause();
+                }else {
+                    if (lecteur.getLastPlayedUri() != null ||lecteur.getLastPlayedUri() != ""){
+                        player.mediaFile = lecteur.getLastPlayedUri();
+
+                    }
+                    player.mediaPlayer.start();
+                }
+            }
+        });
+
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playNextSong();
+            }
+        });
     }
 
     @Override
@@ -174,10 +198,11 @@ public class MainActivity extends AppCompatActivity {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             SongPlayer.LocalBinder binder = (SongPlayer.LocalBinder) service;
             player = binder.getService();
-
-            serviceBound = true;
-            btnPlay.setImageResource(R.drawable.ic_pause);
-            updateInfo();
+            if (player.mediaPlayer != null && player.mediaPlayer.isPlaying()){
+                serviceBound = true;
+                btnPlay.setImageResource(R.drawable.ic_pause);
+                updateInfo();
+            }
 
 
         }
@@ -190,37 +215,47 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void updateInfo(){
-        metaRetriver.setDataSource(player.mediaFile);
-        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-        Bitmap thumbnail = null;
-        // Update the current
-        byte [] data = metaRetriver.getEmbeddedPicture();
-        thumbnail = BitmapFactory.decodeByteArray(data, 0, data.length);
+        if (serviceBound){
+            metaRetriver.setDataSource(player.mediaFile);
+            title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+            artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+            Bitmap thumbnail = null;
+            // Update the current
+            byte [] data = metaRetriver.getEmbeddedPicture();
+            thumbnail = BitmapFactory.decodeByteArray(data, 0, data.length);
 
-        if (thumbnail != null){
-            albumArt.setImageBitmap(thumbnail);
+            if (thumbnail != null){
+                albumArt.setImageBitmap(thumbnail);
+                Bitmap blurredBitmap = GaussianBlur.with(MainActivity.this).render(thumbnail);
+                BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
+                rootLyt.setBackground(ob);
+            }
 
-            Bitmap blurredBitmap = GaussianBlur.with(MainActivity.this).render(thumbnail);
-            BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
-            rootLyt.setBackground(ob);
+            seekBar.setMax(player.mediaPlayer.getDuration());
+            Runnable myRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (player.mediaPlayer != null) {
+                        int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
+                        seekBar.setProgress(mCurrentPosition, true);
+                    }
+                    mHandler.postDelayed(this, 1000);
+                }
+            };
+            myRunnable.run();
+        }else {
 
         }
 
-        seekBar.setMax(player.mediaPlayer.getDuration());
+    }
 
-        Runnable mRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (player.mediaPlayer != null) {
-                    int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
-                    seekBar.setProgress(mCurrentPosition, true);
-                }
-                mHandler.postDelayed(this, 1000);
-            }
-        };
-        mRunnable.run();
+    public void playNextSong() {
+        //SongModel son = listSons.get(audioIndex);
 
+
+            Intent broadcastIntent = new Intent(ACTION_NEXT);
+            //broadcastIntent.putExtra("media", path);
+            sendBroadcast(broadcastIntent);
 
 
     }
