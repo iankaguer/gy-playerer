@@ -5,7 +5,7 @@ import android.content.Context;
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
-
+//model ou table d'enregistrement de la dernière lecture
 public class LecteurPrefModel extends RealmObject {
     @PrimaryKey
     private long id;

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:background="#F6F5F5"
+    android:orientation="vertical"
+    android:layout_height="match_parent"
+    tools:context=".SongList">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_margin="15dp"
+            android:background="@drawable/backitem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:id="@+id/linearroot"
+                android:layout_width="0dp"
+                android:orientation="horizontal"
+                android:layout_height="0dp"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/back"
+                    android:layout_margin="5dp"
+                    android:padding="3dp"
+                    android:layout_width="32dp"
+                    android:tint="@color/color_primary"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_loop"/>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+                    <TextView
+                        android:gravity="center"
+                        android:id="@+id/ltitre"
+                        android:text=""
+                        android:textColor="@color/color_tint"
+                        android:textSize="14sp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                    <TextView
+                        android:gravity="center"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_tint"
+                        android:id="@+id/lartist"
+                        android:text=""
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                    <SeekBar
+                        android:id="@+id/lseekbar"
+                        android:progressTint="@color/color_tint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:progress="0"/>
+
+                </LinearLayout>
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:layout_alignParentEnd="true"
+                    android:layout_margin="5dp"
+                    android:padding="3dp"
+                    android:tint="@color/color_primary"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_search"/>
+        </LinearLayout>
+
+
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>

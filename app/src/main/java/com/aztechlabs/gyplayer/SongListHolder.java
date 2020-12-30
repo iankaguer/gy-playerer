@@ -8,6 +8,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+
+//holder de la liste des sons
 public class SongListHolder extends RecyclerView.ViewHolder {
 
     LinearLayout lytitem;

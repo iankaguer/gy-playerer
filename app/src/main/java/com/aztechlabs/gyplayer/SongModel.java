@@ -6,6 +6,7 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
+//Model ou table d'enregistrement de la liste des sons
 public class SongModel extends RealmObject {
     @PrimaryKey
     private long id;

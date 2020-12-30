@@ -28,18 +28,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.realm.RealmResults;
-
+//Adapter de la list des sons
 public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
     List<SongModel> songs;
     Context ctx;
-    private SongPlayer player;
-    boolean serviceBound;
 
-    public SongListAdapter(Context context , List<SongModel> songs, SongPlayer player, boolean serviceBound) {
+    public SongListAdapter(Context context , List<SongModel> songs) {
         this.songs = songs;
         this.ctx=context;
-        this.serviceBound=serviceBound;
-        this.player = player;
     }
 
     @NonNull
@@ -100,21 +96,6 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
         return songs.size();
     }
 
-    public ServiceConnection servConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            SongPlayer.LocalBinder binder = (SongPlayer.LocalBinder) service;
-            player = binder.getService();
-            serviceBound = true;
-
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            serviceBound = false;
-        }
-    };
 
     public static Bitmap retrieveAlbumArt(String audioPath) throws Throwable {
         Bitmap bitmap = null;

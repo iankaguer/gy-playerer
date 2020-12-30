@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 import io.realm.Realm;
 
+//Tache asynchrone de la mise à jour des sons (et leurs enregistrements dans la base)
 public class SearchSong extends AsyncTask<Void, Integer, Void> {
     private Context ctx;
     private ProgressBar progres;

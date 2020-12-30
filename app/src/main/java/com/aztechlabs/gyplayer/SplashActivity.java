@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
-
+//Activité introduction
 public class SplashActivity extends AppCompatActivity {
     int PERMISSIONWSTO = 1101;
     int PERMISSIONRSTO = 1102;
@@ -31,53 +31,55 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         ProgressBar progress = findViewById(R.id.progress);
+        progress.setProgress(1);
 
 
-        //realmMigration();
+        //Verification des autorisations
+        //Lecture de contenu
         if (ActivityCompat.checkSelfPermission( SplashActivity.this,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(SplashActivity.this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
         }
-
+        //ecriture de contenu
         if (ActivityCompat.checkSelfPermission( SplashActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(SplashActivity.this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
         }
-
+        //Etat du telephone de contenu : Pour controler le volume du son lors des appels
         if (ActivityCompat.checkSelfPermission( SplashActivity.this,
                 Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(SplashActivity.this,
                     new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONPHONE);
         }
 
+        //initiation de la base de données et check & initiation de la dernière lecture
         Realm.init(this);
         Realm realm = Realm.getDefaultInstance();
         LecteurPrefModel lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
         if (lecteur == null){
             LecteurPrefModel.initLecteur(this);
         }
+        progress.setProgress(10);
 
+        //Mise à jour de la liste des sons et lancement de l'activité principale
         try {
             new SearchSong(SplashActivity.this, progress).execute().get();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }finally {
+            progress.setProgress(85);
             new Timer().schedule(new TimerTask(){
                 public void run() {
-                    startActivity(new Intent(SplashActivity.this, SongList.class));
+                    startActivity(new Intent(SplashActivity.this, LecteurActivity.class));
                 }
-            }, 2500);
+            }, 500);
         }
-
-
-
-
-
 
     }
 
+    //Requete de destruction de la base de données
     public void realmMigration(){
         Realm.init(getApplicationContext());
         Realm.deleteRealm(Realm.getDefaultConfiguration());

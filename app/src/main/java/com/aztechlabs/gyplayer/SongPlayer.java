@@ -36,6 +36,8 @@ import java.util.Random;
 
 import io.realm.Realm;
 
+
+//Service lecteur MP3
 public class SongPlayer extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
@@ -66,28 +68,32 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     private MediaController.TransportControls transportControls;
     private static final int NOTIF_ID = 101;
     Realm realm;
+    int positionLecture = 0;
 
+    //lieur du service à l'activité
     @Override
     public IBinder onBind(Intent intent) {
         return iBinder;
     }
 
+    //initiation du lecteur
     private void initMediaPlayer() {
+        
+        //recuperation des données de lecture
         Realm.init(getApplicationContext());
         realm = Realm.getDefaultInstance();
         lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+
         listSons = realm.where(SongModel.class).findAll();
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
 
 
-        //Reset so that the MediaPlayer is not pointing to another data source
+        //Reinitialiser le lecteur au cas ou il pointe sur une autre source et lui attacher des listeners && attributs
         mediaPlayer.reset();
 
         mediaPlayer.setLooping(lecteur.isLoop());
-
-
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnPreparedListener(this);
@@ -99,10 +105,9 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .setUsage(AudioAttributes.USAGE_MEDIA)
-                .build());//mediaPlayer.create(getApplicationContext(), Uri.parse(mediaFile));
+                .build());
 
         try {
-            // Set the data source to the mediaFile location
             mediaPlayer.setDataSource(mediaFile);
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
@@ -112,10 +117,10 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     }
 
+    //a la creation enregistrer les broadcast
     @Override
     public void onCreate() {
         super.onCreate();
-
         callStateListener();
         registerRemovingHeadphoneReceiver();
         register_playNewAudio();
@@ -123,12 +128,16 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     }
 
+    //au lancement recuperer le path de la piste à jouer
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.hasExtra("media")){
             try {
                 //An audio file is passed to the service through putExtra();
                 mediaFile = intent.getExtras().getString("media");
+                if (intent.hasExtra("position")){
+                    positionLecture = intent.getExtras().getInt("position");
+                }
 
             } catch (NullPointerException e) {
                 stopSelf();
@@ -144,17 +153,21 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         }
 
 
-        //Request audio focus
+        //Si le hautParleur est occupé abandonner
         if (requestAudioFocus() == false) {
-            //Could not gain focus
             stopSelf();
         }
-
+        //si un media est envoye l'assigner pour la lecture sinon lire le dernier element
         if (mediaFile != null && mediaFile != "") {
+            
             initMediaPlayer();
 
+        }else {
+            SongModel nextSong = listSons.get(new Random().nextInt(listSons.size()));
+            mediaFile = nextSong.getUri();
+            initMediaPlayer();
         }
-
+        //initier mediassessionmanager
         if (mediaSessionManager == null) {
             try {
                 initMediaSession();
@@ -168,7 +181,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         //return  START_NOT_STICKY;
     }
 
-
+        //Action a realiser en fonction de la disponibilite des hautparleurs
     @Override
     public void onAudioFocusChange(int i) {
         switch (i) {
@@ -203,6 +216,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     }
 
+    //action a realiser à la fin de la lecture
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
         if (lecteur.isLoop()){
@@ -221,19 +235,16 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         //stopSelf();
     }
 
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        lecteur.setLastPlayedUri(mediaFile);
-        lecteur.setLastPlayedPosition(mediaPlayer.getCurrentPosition());
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(lecteur);
-        realm.commitTransaction();
+
         if (mediaPlayer != null) {
             stopMedia();
             mediaPlayer.release();
         }
-        removeAudioFocus();
+        //removeAudioFocus();
         //Disable the PhoneStateListener
         if (phoneStateListener != null) {
             telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
@@ -244,9 +255,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         //unregister BroadcastReceivers
         unregisterReceiver(removingHeadphone);
         unregisterReceiver(playNewAudio);
+        unregisterReceiver(PlayAuChoix);
 
     }
 
+    //si aucun son n'est envoyé via l'intent lire un au hasard, s'execute souvent au tout premier lancement de l'activité
     public  int prochainSon() {
         for(int i = 0 ; i < listSons.size(); i++){
             if (listSons.get(i).getUri() == mediaFile){
@@ -261,20 +274,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         return 0;
     }
 
+    //centre d'Ecoute des erreurs du service
     @Override
     public boolean onError(MediaPlayer mediaPlayer, int i, int i1) {
         Log.e("MediaPlayer Error", i+"MEDIA " + i1);
-        /*switch (i) {
-            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-                Log.e("MediaPlayer Error", "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + i1);
-                break;
-            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-                Log.e("MediaPlayer Error", "MEDIA ERROR SERVER DIED " + i1);
-                break;
-            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-                Log.e("MediaPlayer Error", "MEDIA ERROR UNKNOWN " + i1);
-                break;
-        }*/
+
         return false;
     }
 
@@ -294,7 +298,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     }
 
 
-
+    //Lieur du service à l'activité'
     public class LocalBinder extends Binder {
         public SongPlayer getService() {
             return SongPlayer.this;
@@ -303,6 +307,9 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     private void playMedia() {
         if (!mediaPlayer.isPlaying()) {
+            if (positionLecture !=0){
+                mediaPlayer.seekTo(positionLecture);
+            }
             mediaPlayer.start();
         }
     }
@@ -328,6 +335,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         }
     }
 
+
     private boolean requestAudioFocus() {
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -340,10 +348,9 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     }
 
     private boolean removeAudioFocus() {
-        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
-                audioManager.abandonAudioFocus(this);
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == audioManager.abandonAudioFocus(this);
     }
-
+    //Broadcast en cas de debranchement des ecouteurs
     private BroadcastReceiver removingHeadphone = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -357,13 +364,15 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
             buildNotification(PlaybackStatus.PAUSED);
         }
     };
-
+    
+    //son Enregistrement
     private void registerRemovingHeadphoneReceiver() {
         //register after getting audio focus
         IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         registerReceiver(removingHeadphone, intentFilter);
     }
 
+    //Ecoute des etats du telephone
     public void callStateListener() {
         // Get the telephony manager
         telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -397,7 +406,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
                 PhoneStateListener.LISTEN_CALL_STATE);
     }
 
-
+    //Broadcast qui s'execute quand un son est deja joué et que le user essaie de jouer un autre
     private BroadcastReceiver playNewAudio = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -406,10 +415,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
             //A PLAY_NEW_AUDIO action received eset mediaPlayer to play the new Audio
             stopMedia();
-            /*if (mediaPlayer == null){
-                initMediaPlayer();
-            }*/
-            //mediaPlayer.reset();
+            mediaPlayer.reset();
             initMediaPlayer();
             //updateMetaData();
             buildNotification(PlaybackStatus.PLAYING);
@@ -418,10 +424,24 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
     private void register_playNewAudio() {
         //Register playNewMedia receiver
-        IntentFilter filter = new IntentFilter(SongList._PLAY_NEW_SONG);
+        IntentFilter filter = new IntentFilter(LecteurActivity._PLAY_NEW_SONG);
         registerReceiver(playNewAudio, filter);
     }
+//quand on tente de jouer un son au hasard sans choisir lequel
+    private BroadcastReceiver PlayAuChoix = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            mediaFile = intent.getExtras().getString("media");
+            initMediaPlayer();
+            mediaPlayer.start();
+            if (mediaSession != null){
+                buildNotification(PlaybackStatus.PLAYING);
+            }
 
+        }
+    };
+
+   
 
 
 

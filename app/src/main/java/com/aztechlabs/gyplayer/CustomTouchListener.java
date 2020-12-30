@@ -6,7 +6,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.recyclerview.widget.RecyclerView;
-
+//Recuperateur de l'element de la liste sur  lequel on clique
 public class CustomTouchListener implements RecyclerView.OnItemTouchListener {
 
     //Gesture detector to intercept the touch events
