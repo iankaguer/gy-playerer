@@ -28,26 +28,29 @@ import java.util.Random;
 
 import io.realm.Realm;
 
+import static com.aztechlabs.gyplayer.SongPlayer.ACTION_NEXT;
+
 //fragment du lecteur de music
 public class FragLecteur extends Fragment {
 
-    AppCompatImageView playlist, btnPrev, btnPlay, btnNext, btnFav, btnShuffle, btnLoop;
+    AppCompatImageView  btnPrev, btnPlay, btnNext, btnFav, btnShuffle, btnLoop;
     ImageView albumArt;
     TextView title, artist;
     LinearLayout rootLyt;
     SeekBar seekBar;
     Handler mHandler ;
-    public static final String PLAY_AUCHOIX = "com.aztechlabs.gyplayer.PlayAuChoix";
     Realm realm;
     SongPlayer player;
     LecteurPrefModel lecteur;
     String mediaF;
     MediaMetadataRetriever metaRetriver;
+    List<SongModel> listSons;
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.lectfragment, container, false);
+        View view = inflater.inflate(R.layout.lectfragment, container, false);
+        return view;
         
 
         
@@ -78,10 +81,15 @@ public class FragLecteur extends Fragment {
         seekBar.setProgress(0);
     
         //updateInfo(player.mediaFile);
-        mediaF = lecteur.getLastPlayedUri();
-
+        
+    
+        listSons = ((LecteurActivity)getActivity()).listSons;
         ((LecteurActivity)getActivity()).updateData(rootLyt, albumArt);
         ((LecteurActivity)getActivity()).letSeek(seekBar);
+        
+        mediaF = lecteur.getLastPlayedUri();
+        justUpdateThere(mediaF);
+        
         ((LecteurActivity)getActivity()).updateData(title, artist);
         
         if (lecteur.isShuffle()){
@@ -92,10 +100,39 @@ public class FragLecteur extends Fragment {
             btnLoop.setColorFilter(ContextCompat.getColor(getContext(), R.color.color_tint), android.graphics.PorterDuff.Mode.SRC_IN);
 
         }
+        
+        
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+                if (((LecteurActivity)getActivity()).serviceBound) {
+                    ((LecteurActivity) getActivity()).player.skipToNext();
+                }else {
+                    if (lecteur.isShuffle()){
+                        SongModel nextSong = listSons.get(new Random().nextInt(listSons.size()));
+                        mediaF = nextSong.getUri();
+                        Log.e("index1 isShuffle", mediaF);
+                    }else {
+                        int audioIndex = getCurrentAudioPosition() + 1;
+                        Log.e("index is", audioIndex+"");
+                        if (audioIndex == listSons.size()){
+                            Log.e("index1 is", mediaF);
+                            mediaF = listSons.get(0).getUri();
+                        }else {
+                            mediaF = listSons.get(audioIndex).getUri();
+                            Log.e("index2 is", mediaF);
+                        }
+                    }
+                    justUpdateThere(mediaF);
+                }
+            }
+        });
 
         btnLoop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
                 if (lecteur.isLoop()){
                     btnLoop.setColorFilter(null);
                     realm.beginTransaction();
@@ -117,6 +154,7 @@ public class FragLecteur extends Fragment {
         btnShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
                 if (lecteur.isShuffle()){
                     btnShuffle.setColorFilter(null);
 
@@ -138,19 +176,16 @@ public class FragLecteur extends Fragment {
             @Override
             public void onClick(View view) {
                 if (((LecteurActivity)getActivity()).serviceBound){
-
                     if (((LecteurActivity)getActivity()).player.mediaPlayer.isPlaying()){
                         ((LecteurActivity)getActivity()).player.mediaPlayer.pause();
                         btnPlay.setImageResource(R.drawable.ic_play);
-
                     }else {
                         ((LecteurActivity)getActivity()).player.mediaPlayer.start();
                         btnPlay.setImageResource(R.drawable.ic_pause);
                     }
 
                 }else {
-                    if (mediaF != null){
-                        ((LecteurActivity)getActivity()).playAudio(mediaF);
+                       /* ((LecteurActivity)getActivity()).playAudio(mediaF);
                         btnPlay.setImageResource(R.drawable.ic_pause);
                         metaRetriver.setDataSource(mediaF);
                         seekBar.setMax(Integer.parseInt(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
@@ -159,12 +194,8 @@ public class FragLecteur extends Fragment {
                     }else {
                         List<SongModel> listSons = realm.where(SongModel.class).findAll();
                         SongModel son = listSons.get(new Random().nextInt(listSons.size()));
-                        mediaF = son.getUri();
+                        mediaF = son.getUri();*/
                         ((LecteurActivity)getActivity()).playAudio(mediaF);
-                        
-                    }
-                  
-
                 }
 
 
@@ -175,12 +206,7 @@ public class FragLecteur extends Fragment {
             }
         });
 
-        btnNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //playNextSong();
-            }
-        });
+       
         
     }
     
@@ -190,6 +216,39 @@ public class FragLecteur extends Fragment {
         super.onResume();
         
         
+    }
+    
+    private void justUpdateThere( String path){
+        
+        metaRetriver.setDataSource(path);
+        seekBar.setMax(Integer.parseInt(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
+        artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+    
+        // Update the current
+        byte [] data = metaRetriver.getEmbeddedPicture();
+        if(data !=null){
+            Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
+            if (b != null){
+                albumArt.setImageBitmap(b);
+                Bitmap blurredBitmap = GaussianBlur.with(getContext()).render(b);
+                BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
+                rootLyt.setBackground(ob);
+            }
+        }
+        
+    }
+    
+    public int getCurrentAudioPosition(){
+        int audioIndex = 0;
+        for (int i=0; i<listSons.size(); i++){
+            if (listSons.get(i).getUri() == mediaF){
+                audioIndex = i;
+            }
+        }
+        return audioIndex;
     }
 
 

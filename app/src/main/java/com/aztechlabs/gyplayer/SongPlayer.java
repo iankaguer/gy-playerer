@@ -28,6 +28,7 @@ import android.util.Log;
 import android.util.Size;
 
 
+import androidx.collection.CircularArray;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
@@ -80,11 +81,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     private void initMediaPlayer() {
         
         //recuperation des données de lecture
-        Realm.init(getApplicationContext());
-        realm = Realm.getDefaultInstance();
-        lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
-
-        listSons = realm.where(SongModel.class).findAll();
+        
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         }
@@ -131,6 +128,11 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     //au lancement recuperer le path de la piste à jouer
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Realm.init(getApplicationContext());
+        realm = Realm.getDefaultInstance();
+        lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+        listSons = realm.where(SongModel.class).findAll();
+        
         if (intent.hasExtra("media")){
             try {
                 //An audio file is passed to the service through putExtra();
@@ -219,18 +221,8 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
     //action a realiser à la fin de la lecture
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-        if (lecteur.isLoop()){
-            playMedia();
-        }else {
-            if (lecteur.isShuffle()){
-               SongModel nextSong = listSons.get(new Random().nextInt(listSons.size()));
-               mediaFile = nextSong.getUri();
-               playMedia();
-            }else {
-                mediaFile = listSons.get(prochainSon()).getUri();
-                playMedia();
-            }
-        }
+        lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+        skipToNext();
         //stopMedia();
         //stopSelf();
     }
@@ -255,24 +247,10 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         //unregister BroadcastReceivers
         unregisterReceiver(removingHeadphone);
         unregisterReceiver(playNewAudio);
-        unregisterReceiver(PlayAuChoix);
 
     }
 
-    //si aucun son n'est envoyé via l'intent lire un au hasard, s'execute souvent au tout premier lancement de l'activité
-    public  int prochainSon() {
-        for(int i = 0 ; i < listSons.size(); i++){
-            if (listSons.get(i).getUri() == mediaFile){
-                int nextIndex = i+1;
-                if (nextIndex > listSons.size()){
-                    return 0;
-                }else {
-                    return i+1;
-                }
-            }
-        }
-        return 0;
-    }
+  
 
     //centre d'Ecoute des erreurs du service
     @Override
@@ -427,19 +405,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
         IntentFilter filter = new IntentFilter(LecteurActivity._PLAY_NEW_SONG);
         registerReceiver(playNewAudio, filter);
     }
-//quand on tente de jouer un son au hasard sans choisir lequel
-    private BroadcastReceiver PlayAuChoix = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            mediaFile = intent.getExtras().getString("media");
-            initMediaPlayer();
-            mediaPlayer.start();
-            if (mediaSession != null){
-                buildNotification(PlaybackStatus.PLAYING);
-            }
-
-        }
-    };
+    
 
    
 
@@ -477,6 +443,7 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
             @Override
             public void onSkipToNext() {
                 super.onSkipToNext();
+                skipToNext();
                 transportControls.skipToNext();
                 updateMetaData();
                 buildNotification(PlaybackStatus.PLAYING);
@@ -531,10 +498,41 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
 
 
     }
+    
+    public void skipToNext() {
+        Log.e("ancien media", mediaFile);
+        lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+        if (!lecteur.isLoop()){
+            if (lecteur.isShuffle()){
+                SongModel nextSong = listSons.get(new Random().nextInt(listSons.size()));
+                mediaFile = nextSong.getUri();
+            }else {
+                int audioIndex = getCurrentAudioPosition() + 1;
+                if (audioIndex == listSons.size()){
+                    mediaFile = listSons.get(0).getUri();
+                }else {
+                    mediaFile = listSons.get(audioIndex).getUri();
+                }
+            }
+        }
+        
+        
+        stopMedia();
+        //reset mediaPlayer
+        mediaPlayer.reset();
+        Log.e("nouveau media", mediaFile);
+        initMediaPlayer();
+    }
 
-   /* public MediaSession getCurrentMediaSession(){
-        return mediaSession;
-    }*/
+    public int getCurrentAudioPosition(){
+        int audioIndex = 0;
+        for (int i=0; i<listSons.size(); i++){
+            if (listSons.get(i).getUri() == mediaFile){
+                audioIndex = i;
+            }
+        }
+        return audioIndex;
+    }
 
 
 

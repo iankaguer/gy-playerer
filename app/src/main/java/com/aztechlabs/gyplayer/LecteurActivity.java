@@ -44,19 +44,23 @@ public class LecteurActivity extends AppCompatActivity {
   ViewPager viewPager;
   BubbleNavigationLinearView equal_navigation_bar;
     public static final String _PLAY_NEW_SONG = "com.aztechlabs.gyplayer.PlayNewAudio";
-    AppCompatImageView back;
     public SongPlayer player;
     boolean serviceBound = false;
     List<SongModel> listSons;
     Realm realm;
     LecteurPrefModel lecteur;
     MediaMetadataRetriever metaRetriver;
+    Handler handl1, handl2;
+    Runnable seekRunnable;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_lecteur);
       metaRetriver = new MediaMetadataRetriever();
+    
+      handl1 = new Handler();
+      handl2 = new Handler();
     
       Realm.init(this);
     
@@ -96,7 +100,18 @@ public class LecteurActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (serviceBound) {
-            //unbindService(serviceConnection);
+            realm.beginTransaction();
+            lecteur.setLastPlayedUri(player.mediaFile);
+            lecteur.setLastPlayedPosition(player.mediaPlayer.getCurrentPosition());
+            
+            realm.copyToRealmOrUpdate(lecteur);
+            realm.commitTransaction();
+            
+            handl1.removeCallbacks(seekRunnable);
+            
+            
+            
+            unbindService(serviceConnection);
             //service is active
             if (player !=null){
                 player.stopSelf();
@@ -112,7 +127,7 @@ public class LecteurActivity extends AppCompatActivity {
             SongPlayer.LocalBinder binder = (SongPlayer.LocalBinder) service;
             player = binder.getService();
             serviceBound = true;
-            Log.e("lets go", "were connected");
+            
             
         }
         
@@ -138,6 +153,7 @@ public class LecteurActivity extends AppCompatActivity {
             playerIntent.putExtra("media", path);
             startService(playerIntent);
             bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         } else {
             
             //Service is active
@@ -150,46 +166,50 @@ public class LecteurActivity extends AppCompatActivity {
     }
     //fonction qui suit la postion de lecture actuelle et met a jour le seekbar
     public void letSeek(SeekBar seekBar){
-        Handler mHandler = new Handler();
-        Runnable myRunnable = new Runnable() {
+        seekRunnable = new Runnable() {
             @Override
             public void run() {
                 
                 if (serviceBound){
-                    seekBar.setMax(player.mediaPlayer.getDuration());
-                    int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
-                    seekBar.setProgress(mCurrentPosition, true);
+                    try {
+                        seekBar.setMax(player.mediaPlayer.getDuration());
+                        int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
+                        seekBar.setProgress(mCurrentPosition, true);
+                    }catch (Exception e){
+                        Log.e("Exception set duration => ", e.getStackTrace()+" => " +e.getMessage());
+                    }
                 }
                 
-                mHandler.postDelayed(this, 1000);
+                handl1.postDelayed(this, 1000);
             }
         };
-        myRunnable.run();
+        seekRunnable.run();
     }
     //mise a jour de la couverture de l'album en fonction de la lecture
     public void updateData(LinearLayout rootLyt, ImageView albumArt){
-        Handler mHandler = new Handler();
         Runnable myRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.e("runnnnn", "running");
             
                 if (serviceBound){
     
                     metaRetriver.setDataSource(player.mediaFile);
                     // Update the current
                     byte [] data = metaRetriver.getEmbeddedPicture();
-                    Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    if (b != null){
-                        albumArt.setImageBitmap(b);
-                        Bitmap blurredBitmap = GaussianBlur.with(LecteurActivity.this).render(b);
-                        BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
-                        rootLyt.setBackground(ob);
+                    if(data !=null){
+                        Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        if (b != null){
+                            albumArt.setImageBitmap(b);
+                            Bitmap blurredBitmap = GaussianBlur.with(LecteurActivity.this).render(b);
+                            BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
+                            rootLyt.setBackground(ob);
+                        }
                     }
+                    
                 
                 }
             
-                mHandler.postDelayed(this, 1000);
+                handl2.postDelayed(this, 1000);
             }
         };
         myRunnable.run();
@@ -205,8 +225,13 @@ public class LecteurActivity extends AppCompatActivity {
                 
                 if (serviceBound){
                     metaRetriver.setDataSource(player.mediaFile);
-                    title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
                     artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+                    String ttle = metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                    if (ttle != null){
+                        artist.setText(ttle);
+                    }else {
+                        artist.setText((player.mediaFile).substring((player.mediaFile).lastIndexOf("/")+1));
+                    }
                 }
                 
                 mHandler.postDelayed(this, 1000);
