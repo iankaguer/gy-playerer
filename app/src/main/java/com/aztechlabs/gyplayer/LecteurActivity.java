@@ -8,6 +8,8 @@ import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +40,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
+
+import static androidx.core.content.ContextCompat.getSystemService;
+import static java.lang.Character.getType;
+
 ///Activité principale
 public class LecteurActivity extends AppCompatActivity {
  
@@ -143,104 +149,7 @@ public class LecteurActivity extends AppCompatActivity {
         }
     };
   
-    
-    //lecture de sons :  si aucun son en lecture envoyer au service sinon lui faire parvenir via le broadcast
-    public void playAudio(String path) {
-        //SongModel son = listSons.get(audioIndex);
-        if (!serviceBound) {
-            
-            Intent playerIntent = new Intent(this, SongPlayer.class);
-            playerIntent.putExtra("media", path);
-            startService(playerIntent);
-            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        } else {
-            
-            //Service is active
-            //Send a broadcast to the service -> PLAY_NEW_AUDIO
-            Intent broadcastIntent = new Intent(_PLAY_NEW_SONG);
-            broadcastIntent.putExtra("media", path);
-            sendBroadcast(broadcastIntent);
-        }
-        
-    }
-    //fonction qui suit la postion de lecture actuelle et met a jour le seekbar
-    public void letSeek(SeekBar seekBar){
-        seekRunnable = new Runnable() {
-            @Override
-            public void run() {
-                
-                if (serviceBound){
-                    try {
-                        seekBar.setMax(player.mediaPlayer.getDuration());
-                        int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
-                        seekBar.setProgress(mCurrentPosition, true);
-                    }catch (Exception e){
-                        Log.e("Exception set duration => ", e.getStackTrace()+" => " +e.getMessage());
-                    }
-                }
-                
-                handl1.postDelayed(this, 1000);
-            }
-        };
-        seekRunnable.run();
-    }
-    //mise a jour de la couverture de l'album en fonction de la lecture
-    public void updateData(LinearLayout rootLyt, ImageView albumArt){
-        Runnable myRunnable = new Runnable() {
-            @Override
-            public void run() {
-            
-                if (serviceBound){
-    
-                    metaRetriver.setDataSource(player.mediaFile);
-                    // Update the current
-                    byte [] data = metaRetriver.getEmbeddedPicture();
-                    if(data !=null){
-                        Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        if (b != null){
-                            albumArt.setImageBitmap(b);
-                            Bitmap blurredBitmap = GaussianBlur.with(LecteurActivity.this).render(b);
-                            BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
-                            rootLyt.setBackground(ob);
-                        }
-                    }
-                    
-                
-                }
-            
-                handl2.postDelayed(this, 1000);
-            }
-        };
-        myRunnable.run();
-        
-        
-    }
-    //Mise a jour de titre et nom d'artiste
-    public void updateData(TextView title, TextView artist){
-        Handler mHandler = new Handler();
-        Runnable myRunnable = new Runnable() {
-            @Override
-            public void run() {
-                
-                if (serviceBound){
-                    metaRetriver.setDataSource(player.mediaFile);
-                    artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-                    String ttle = metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                    if (ttle != null){
-                        artist.setText(ttle);
-                    }else {
-                        artist.setText((player.mediaFile).substring((player.mediaFile).lastIndexOf("/")+1));
-                    }
-                }
-                
-                mHandler.postDelayed(this, 1000);
-            }
-        };
-        myRunnable.run();
-        
-        
-    }
+   
    
 //liaison des fragments a l'activité
  @SuppressLint("ClickableViewAccessibility")
@@ -282,4 +191,99 @@ public class LecteurActivity extends AppCompatActivity {
   viewPager.setCurrentItem(newInitialPosition, false);
 
  }
+    
+    
+    //lecture de sons :  si aucun son en lecture envoyer au service sinon lui faire parvenir via le broadcast
+    public void playAudio(String path) {
+        //SongModel son = listSons.get(audioIndex);
+        if (!serviceBound) {
+            
+            Intent playerIntent = new Intent(this, SongPlayer.class);
+            playerIntent.putExtra("media", path);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            
+            //Service is active
+            //Send a broadcast to the service -> PLAY_NEW_AUDIO
+            Intent broadcastIntent = new Intent(_PLAY_NEW_SONG);
+            broadcastIntent.putExtra("media", path);
+            sendBroadcast(broadcastIntent);
+        }
+        
+    }
+    //fonction qui suit la postion de lecture actuelle et met a jour le seekbar
+    public void letSeek(SeekBar seekBar){
+        seekRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (serviceBound){
+                    try {
+                        seekBar.setMax(player.mediaPlayer.getDuration());
+                        int mCurrentPosition = player.mediaPlayer.getCurrentPosition();
+                        seekBar.setProgress(mCurrentPosition, true);
+                    }catch (Exception e){
+                        Log.e("Exception set duration => ", e.getStackTrace()+" => " +e.getMessage());
+                    }
+                }
+                handl1.postDelayed(this, 1000);
+            }
+        };
+        seekRunnable.run();
+    }
+    //mise a jour de la couverture de l'album en fonction de la lecture
+    public void updateData(LinearLayout rootLyt, ImageView albumArt){
+        Runnable myRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (serviceBound){
+                    metaRetriver.setDataSource(player.mediaFile);
+                    // Update the current
+                    byte [] data = metaRetriver.getEmbeddedPicture();
+                    if(data !=null){
+                        Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
+                        if (b != null){
+                            albumArt.setImageBitmap(b);
+                            Bitmap blurredBitmap = GaussianBlur.with(LecteurActivity.this).render(b);
+                            BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
+                            rootLyt.setBackground(ob);
+                        }
+                    }else {
+                        albumArt.setImageResource(R.drawable.ic_logo);
+                        rootLyt.setBackgroundResource(R.drawable.boreal);
+                    }
+                }
+                handl2.postDelayed(this, 1000);
+            }
+        };
+        myRunnable.run();
+    }
+    //Mise a jour de titre et nom d'artiste
+    public void updateData(TextView title, TextView artist){
+        Handler mHandler = new Handler();
+        Runnable myRunnable = new Runnable() {
+            @Override
+            public void run() {
+                
+                if (serviceBound){
+                    metaRetriver.setDataSource(player.mediaFile);
+                    artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+                    String ttle = metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                    if (ttle != null){
+                        title.setText(ttle);
+                    }else {
+                        title.setText((player.mediaFile).substring((player.mediaFile).lastIndexOf("/")+1));
+                    }
+                }
+                
+                mHandler.postDelayed(this, 1000);
+            }
+        };
+        myRunnable.run();
+        
+        
+    }
+    
+ 
 }

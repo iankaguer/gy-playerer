@@ -38,29 +38,30 @@ public class SplashActivity extends AppCompatActivity {
         LottieAnimationView lottieAnimationView = (LottieAnimationView) findViewById(R.id.animation);
         lottieAnimationView.setAnimation("gyplayer.json");
         lottieAnimationView.loop(false); lottieAnimationView.playAnimation();
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
+        }
+        //ecriture de contenu
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
+        }
+        //Etat du telephone de contenu : Pour controler le volume du son lors des appels
+        
     
         new Timer().schedule(new TimerTask(){
             public void run() {
-                //Verification des autorisations
-                //Lecture de contenu
-                if (ActivityCompat.checkSelfPermission( SplashActivity.this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(SplashActivity.this,
-                            new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
-                }
-                //ecriture de contenu
-                if (ActivityCompat.checkSelfPermission( SplashActivity.this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(SplashActivity.this,
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSIONWSTO);
-                }
-                //Etat du telephone de contenu : Pour controler le volume du son lors des appels
-                if (ActivityCompat.checkSelfPermission( SplashActivity.this,
-                        Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(SplashActivity.this,
-                            new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONPHONE);
+                while (!checkReadStorage()){
+                    checkReadStorage();
                 }
     
+                while (!checkTelephonyPerm()){
+                    checkTelephonyPerm();
+                }
+                
                 //initiation de la base de données et check & initiation de la dernière lecture
                 Realm.init(SplashActivity.this);
                 Realm realm = Realm.getDefaultInstance();
@@ -90,6 +91,28 @@ public class SplashActivity extends AppCompatActivity {
 
         
 
+    }
+    
+    public boolean checkReadStorage(){
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONRSTO);
+        }else {
+            return true;
+        }
+     return false;
+    }
+    
+    public boolean checkTelephonyPerm(){
+        if (ActivityCompat.checkSelfPermission( SplashActivity.this,
+                Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(SplashActivity.this,
+                    new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSIONPHONE);
+        }else {
+            return true;
+        }
+        return false;
     }
 
     //Requete de destruction de la base de données

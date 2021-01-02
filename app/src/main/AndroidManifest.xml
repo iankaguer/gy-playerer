@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.aztechlabs.gyplayer">
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
@@ -25,6 +28,7 @@
         </activity>
         <activity android:name=".LecteurActivity" android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <service android:name=".SongPlayer"/>
+
 
     </application>
 

@@ -45,15 +45,14 @@ public class FragLecteur extends Fragment {
     String mediaF;
     MediaMetadataRetriever metaRetriver;
     List<SongModel> listSons;
+    int audioIndex = 0;
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.lectfragment, container, false);
         return view;
-        
-
-        
+       
 
     }
 
@@ -90,8 +89,13 @@ public class FragLecteur extends Fragment {
         mediaF = lecteur.getLastPlayedUri();
         justUpdateThere(mediaF);
         
-        ((LecteurActivity)getActivity()).updateData(title, artist);
         
+        ((LecteurActivity)getActivity()).updateData(title, artist);
+        if (((LecteurActivity)getActivity()).serviceBound){
+            if (player.mediaPlayer.isPlaying()){
+                btnPlay.setBackgroundResource(R.drawable.ic_pause);
+            }
+        }
         if (lecteur.isShuffle()){
             btnShuffle.setColorFilter(ContextCompat.getColor(getContext(), R.color.color_tint), android.graphics.PorterDuff.Mode.SRC_IN);
 
@@ -106,6 +110,7 @@ public class FragLecteur extends Fragment {
             @Override
             public void onClick(View view) {
                 lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+                
                 if (((LecteurActivity)getActivity()).serviceBound) {
                     ((LecteurActivity) getActivity()).player.skipToNext();
                 }else {
@@ -114,17 +119,74 @@ public class FragLecteur extends Fragment {
                         mediaF = nextSong.getUri();
                         Log.e("index1 isShuffle", mediaF);
                     }else {
-                        int audioIndex = getCurrentAudioPosition() + 1;
-                        Log.e("index is", audioIndex+"");
+                        mediaF = lecteur.getLastPlayedUri();
+                        
+                        for (int i=0; i<listSons.size(); i++){
+                            Log.e("index booucle", audioIndex+"");
+                            if (listSons.get(i).getUri() == mediaF){
+                                audioIndex = i;
+                                Log.e("index trouvé", audioIndex+"");
+                            }
+                        }
+                        audioIndex = audioIndex +1;
+
                         if (audioIndex == listSons.size()){
-                            Log.e("index1 is", mediaF);
-                            mediaF = listSons.get(0).getUri();
-                        }else {
+                            audioIndex = 0;
                             mediaF = listSons.get(audioIndex).getUri();
-                            Log.e("index2 is", mediaF);
+                            
+                        }else {
+                            Log.e("index1 media", audioIndex +" "+ listSons.size());
+                            mediaF = listSons.get(audioIndex).getUri();
+                            
                         }
                     }
+                    //Log.e("index2 media avant enregistrement", mediaF);
+                    realm.beginTransaction();
+                    lecteur.setLastPlayedUri(mediaF);
+                    realm.copyToRealmOrUpdate(lecteur);
+                    realm.commitTransaction();
                     justUpdateThere(mediaF);
+                    
+                }
+            }
+        });
+    
+        btnPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
+            
+                if (((LecteurActivity)getActivity()).serviceBound) {
+                    ((LecteurActivity) getActivity()).player.skipToPrev();
+                }else {
+                    if (lecteur.isShuffle()){
+                        SongModel nextSong = listSons.get(new Random().nextInt(listSons.size()));
+                        mediaF = nextSong.getUri();
+                        Log.e("index1 isShuffle", mediaF);
+                    }else {
+                        mediaF = lecteur.getLastPlayedUri();
+                    
+                        for (int i=0; i<listSons.size(); i++){
+                            if (listSons.get(i).getUri() == mediaF){
+                                audioIndex = i;
+                            }
+                        }
+                        audioIndex = audioIndex -1;
+                    
+                        if (audioIndex < 0){
+                            audioIndex = listSons.size()-1;
+                            mediaF = listSons.get(audioIndex).getUri();
+                        }else {
+                            mediaF = listSons.get(audioIndex).getUri();
+                        }
+                    }
+                    //Log.e("index2 media avant enregistrement", mediaF);
+                    realm.beginTransaction();
+                    lecteur.setLastPlayedUri(mediaF);
+                    realm.copyToRealmOrUpdate(lecteur);
+                    realm.commitTransaction();
+                    justUpdateThere(mediaF);
+                
                 }
             }
         });
@@ -145,7 +207,6 @@ public class FragLecteur extends Fragment {
                     lecteur.setIsLoop(true);
                     realm.copyToRealmOrUpdate(lecteur);
                     realm.commitTransaction();
-                    lecteur = realm.where(LecteurPrefModel.class).equalTo("id", 1).findFirst();
                 }
             }
         });
@@ -185,16 +246,7 @@ public class FragLecteur extends Fragment {
                     }
 
                 }else {
-                       /* ((LecteurActivity)getActivity()).playAudio(mediaF);
-                        btnPlay.setImageResource(R.drawable.ic_pause);
-                        metaRetriver.setDataSource(mediaF);
-                        seekBar.setMax(Integer.parseInt(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
-                        ((LecteurActivity)getActivity()).letSeek(seekBar);
-
-                    }else {
-                        List<SongModel> listSons = realm.where(SongModel.class).findAll();
-                        SongModel son = listSons.get(new Random().nextInt(listSons.size()));
-                        mediaF = son.getUri();*/
+                     
                         ((LecteurActivity)getActivity()).playAudio(mediaF);
                 }
 
@@ -212,44 +264,44 @@ public class FragLecteur extends Fragment {
     
     @Override
     public void onResume() {
-        
         super.onResume();
+        if (((LecteurActivity)getActivity()).serviceBound){
+        
+        }else {
+            justUpdateThere(mediaF);
+        }
+        
+        
         
         
     }
     
     private void justUpdateThere( String path){
-        
-        metaRetriver.setDataSource(path);
-        seekBar.setMax(Integer.parseInt(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
-        artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-        title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+        if (path!=null || path != ""){
+            metaRetriver.setDataSource(path);
+            seekBar.setMax(Integer.parseInt(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)));
+            artist.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
+            title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+            //title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
+            //title.setText(metaRetriver.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
     
-        // Update the current
-        byte [] data = metaRetriver.getEmbeddedPicture();
-        if(data !=null){
-            Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
-            if (b != null){
-                albumArt.setImageBitmap(b);
-                Bitmap blurredBitmap = GaussianBlur.with(getContext()).render(b);
-                BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
-                rootLyt.setBackground(ob);
+            // Update the current
+            byte [] data = metaRetriver.getEmbeddedPicture();
+            if(data !=null){
+                Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length);
+                if (b != null){
+                    albumArt.setImageBitmap(b);
+                    Bitmap blurredBitmap = GaussianBlur.with(getContext()).render(b);
+                    BitmapDrawable ob = new BitmapDrawable(getResources(), blurredBitmap);
+                    rootLyt.setBackground(ob);
+                }
             }
         }
         
+        
     }
     
-    public int getCurrentAudioPosition(){
-        int audioIndex = 0;
-        for (int i=0; i<listSons.size(); i++){
-            if (listSons.get(i).getUri() == mediaF){
-                audioIndex = i;
-            }
-        }
-        return audioIndex;
-    }
+   
 
 
 

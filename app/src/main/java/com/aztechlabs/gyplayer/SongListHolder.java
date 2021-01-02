@@ -8,6 +8,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.List;
+
 
 //holder de la liste des sons
 public class SongListHolder extends RecyclerView.ViewHolder {
@@ -23,4 +25,6 @@ public class SongListHolder extends RecyclerView.ViewHolder {
         titre = itemView.findViewById(R.id.titre);
         artist = itemView.findViewById(R.id.artist);
     }
+    
+    
 }

@@ -5,13 +5,13 @@
     android:layout_width="match_parent"
     android:background="#F6F5F5"
     android:orientation="vertical"
-    android:layout_height="match_parent"
-    tools:context=".SongList">
+    android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="wrap_content">
         <LinearLayout
+            android:id="@+id/barlytstandard"
             android:layout_margin="15dp"
             android:background="@drawable/backitem"
             android:layout_width="match_parent"
@@ -22,7 +22,7 @@
                 android:orientation="horizontal"
                 android:layout_height="0dp"/>
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/back"
+                    android:id="@+id/reloadbtn"
                     android:layout_margin="5dp"
                     android:padding="3dp"
                     android:layout_width="32dp"
@@ -35,6 +35,14 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1">
+                    <ProgressBar
+                        android:id="@+id/progressb"
+                        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                        android:progressTint="@color/color_primary"
+                        android:layout_width="match_parent"
+                        android:visibility="gone"
+                        android:layout_height="2dp"
+                        android:progress="0"/>
                     <TextView
                         android:gravity="center"
                         android:id="@+id/ltitre"
@@ -60,6 +68,7 @@
 
                 </LinearLayout>
                 <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/searchbtn"
                     android:layout_alignParentEnd="true"
                     android:layout_margin="5dp"
                     android:padding="3dp"
@@ -67,6 +76,39 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_search"/>
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/barlytsearch"
+            android:layout_margin="15dp"
+            android:background="@drawable/backitem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+
+                <EditText
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_margin="3dp"
+                    android:padding="5dp"
+                    android:layout_height="wrap_content"
+                    android:hint="Rechercher..."
+                    android:textColor="@android:color/black"
+                    android:background="@null"
+                    android:textSize="20sp"
+                    android:id="@+id/edittextsearch"/>
+
+
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/backbtn"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="5dp"
+                android:padding="3dp"
+                android:tint="@color/color_primary"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back"/>
         </LinearLayout>
 
 

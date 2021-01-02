@@ -18,12 +18,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +35,7 @@ import io.realm.RealmResults;
 public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
     List<SongModel> songs;
     Context ctx;
+    List<SongModel> songsFiltered;
 
     public SongListAdapter(Context context , List<SongModel> songs) {
         this.songs = songs;
@@ -117,6 +121,10 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
         }
         return bitmap;
     }
+    
 
+    
+    
+    
 
 }
