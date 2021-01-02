@@ -667,7 +667,6 @@ public class SongPlayer extends Service implements MediaPlayer.OnCompletionListe
                     //.setStyle(Notification.Style())
                     .setPriority(Notification.PRIORITY_DEFAULT)
                     .setOnlyAlertOnce(true)
-                    .setAutoCancel(false)
                     .setOngoing(true)
                     .setSmallIcon(R.drawable.ic_logo)
                     .setContentText(artist)

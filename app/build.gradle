@@ -44,6 +44,7 @@ dependencies {
     implementation 'androidx.palette:palette:1.0.0'
     implementation 'com.github.jrvansuita:GaussianBlur:1.0.3'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.4.1'
     implementation 'com.gauravk.bubblenavigation:bubblenavigation:1.0.7'
     //implementation 'com.github.aliab:circular-music-progressbar:v1.3.0'
 }

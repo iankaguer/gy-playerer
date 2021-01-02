@@ -1,11 +1,10 @@
 package com.aztechlabs.gyplayer;
 
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -23,12 +22,16 @@ import androidx.fragment.app.Fragment;
 
 import com.vansuita.gaussianblur.GaussianBlur;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
 import io.realm.Realm;
-
-import static com.aztechlabs.gyplayer.SongPlayer.ACTION_NEXT;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 //fragment du lecteur de music
 public class FragLecteur extends Fragment {
@@ -80,6 +83,8 @@ public class FragLecteur extends Fragment {
         seekBar.setProgress(0);
     
         //updateInfo(player.mediaFile);
+    
+        
         
     
         listSons = ((LecteurActivity)getActivity()).listSons;
@@ -250,11 +255,6 @@ public class FragLecteur extends Fragment {
                         ((LecteurActivity)getActivity()).playAudio(mediaF);
                 }
 
-
-
-                //////////////////////////////////
-
-
             }
         });
 
@@ -299,12 +299,11 @@ public class FragLecteur extends Fragment {
         }
         
         
+        
     }
     
-   
-
-
-
     
     
 }
+
+

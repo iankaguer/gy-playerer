@@ -61,24 +61,13 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListHolder> {
     public void onBindViewHolder(@NonNull SongListHolder holder, int position) {
         //Log.e("lesSons", songs+"");
         SongModel song = songs.get(position);
-
-
-
-            /*MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(ctx, Uri.parse(song.getUri()));
-            String ss = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-            byte [] data = mmr.getEmbeddedPicture();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            //Bitmap bitmap = BitmapFactory.decodeResource(ctx.getResources(), mmr.getPrimaryImage());
-            //Bitmap bitmap = mmr.getPrimaryImage();
-            mmr.release();*/
+        
             Bitmap bitmap = null;
             try {
                 bitmap = retrieveAlbumArt(song.getUri());
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
-
 
         holder.titre.setText(song.getName());
             if (song.isIsfavorite()){

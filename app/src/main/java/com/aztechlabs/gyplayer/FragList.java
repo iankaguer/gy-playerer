@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.SearchView;
@@ -116,6 +117,12 @@ public class FragList extends Fragment {
                     e.printStackTrace();
                     
                 }finally {
+                    listSons = realm.where(SongModel.class).findAll();
+                    recyclerV.setLayoutManager(new LinearLayoutManager(getActivity()));
+                    sAdapter = new SongListAdapter(getContext(), listSons);
+                    recyclerV.setAdapter(sAdapter);
+                    sAdapter.notifyDataSetChanged();
+                    Toast.makeText(getContext(), "Liste Mise à jour", Toast.LENGTH_SHORT).show();
                     progressb.setVisibility(View.GONE);
                 }
             }
